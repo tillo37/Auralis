@@ -1,0 +1,2 @@
+# Auralis
+music streaming platform
