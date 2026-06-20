@@ -92,6 +92,53 @@ All endpoints are versioned under `/api/v1`:
 |--------|----------------|--------------|
 | GET    | /api/v1/health | Health check |
 
+## User Schema
+
+### Fields
+
+| Field          | Type      | Notes                        |
+|----------------|-----------|------------------------------|
+| `id`           | String    | CUID primary key             |
+| `email`        | String    | Unique                       |
+| `username`     | String    | Unique                       |
+| `passwordHash` | String    | Never exposed in public APIs |
+| `displayName`  | String    |                              |
+| `avatarUrl`    | String?   | Nullable                     |
+| `isVerified`   | Boolean   | Default `false`              |
+| `createdAt`    | DateTime  | Auto-set on create           |
+| `updatedAt`    | DateTime  | Auto-updated                 |
+
+### Unique Constraints
+
+- `email` — unique index
+- `username` — unique index
+
+### Seed Workflow
+
+```bash
+# Start PostgreSQL
+docker compose up -d
+
+# Apply migrations
+pnpm db:migrate
+
+# Seed demo user (demo@auralis.app)
+pnpm db:seed
+```
+
+The seed upserts a single demo user — safe to run multiple times.
+
+## Database Workflow
+
+```bash
+# After editing prisma/schema.prisma:
+pnpm db:generate          # Regenerate Prisma client
+pnpm db:migrate           # Create + apply dev migration
+pnpm db:migrate:deploy    # Apply migrations (production/CI)
+pnpm db:studio            # Open Prisma Studio GUI
+pnpm db:seed              # Seed demo data
+```
+
 ## Build & Quality
 
 ```bash
