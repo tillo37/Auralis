@@ -1,0 +1,65 @@
+import { env } from '../env';
+
+interface RequestOptions extends RequestInit {
+  params?: Record<string, string>;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  success: true;
+}
+
+interface ApiError {
+  success: false;
+  message: string;
+  timestamp: string;
+}
+
+export class ApiClient {
+  private baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, '');
+  }
+
+  private buildUrl(path: string, params?: Record<string, string>): string {
+    const url = new URL(`${this.baseUrl}${path}`);
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    }
+    return url.toString();
+  }
+
+  async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+    const { params, ...init } = options;
+    const url = this.buildUrl(path, params);
+
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...init.headers },
+      ...init,
+    });
+
+    const body = (await res.json()) as ApiResponse<T> | ApiError;
+
+    if (!res.ok) {
+      const err = body as ApiError;
+      throw new Error(err.message ?? `Request failed: ${res.status}`);
+    }
+
+    return body as T;
+  }
+
+  get<T>(path: string, options?: RequestOptions): Promise<T> {
+    return this.request<T>(path, { ...options, method: 'GET' });
+  }
+
+  post<T>(path: string, body: unknown, options?: RequestOptions): Promise<T> {
+    return this.request<T>(path, {
+      ...options,
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+}
+
+export const apiClient = new ApiClient(`${env.NEXT_PUBLIC_API_URL}/api/v1`);
