@@ -20,3 +20,46 @@ model User {
 
   @@map("users")
 }
+
+model Artist {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  bio       String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  albums    Album[]
+  tracks    Track[]
+
+  @@map("artists")
+}
+
+model Album {
+  id          String   @id @default(cuid())
+  title       String
+  artistId    String
+  coverUrl    String?
+  releaseYear Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tracks      Track[]
+
+  @@map("albums")
+}
+
+model Track {
+  id              String   @id @default(cuid())
+  title           String
+  albumId         String
+  artistId        String
+  trackNumber     Int
+  durationSeconds Int
+  audioUrl        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  album           Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  artist          Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  @@map("tracks")
+}
