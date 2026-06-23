@@ -13,10 +13,8 @@ import {
 import type { LoginFormData, RegisterFormData } from '@/features/auth/schemas';
 
 interface AuthResponse {
-  data: {
-    user: UserPublic;
-    accessToken: string;
-  };
+  user: UserPublic;
+  accessToken: string;
 }
 
 interface AuthContextValue {
@@ -45,16 +43,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (data: LoginFormData) => {
     const res = await apiClient.post<AuthResponse>('/auth/login', data);
-    setToken(res.data.accessToken);
-    setStoredUser(res.data.user);
-    setUser(res.data.user);
+    setToken(res.accessToken);
+    setStoredUser(res.user);
+    setUser(res.user);
   }, []);
 
   const register = useCallback(async (data: RegisterFormData) => {
     const res = await apiClient.post<AuthResponse>('/auth/register', data);
-    setToken(res.data.accessToken);
-    setStoredUser(res.data.user);
-    setUser(res.data.user);
+    setToken(res.accessToken);
+    setStoredUser(res.user);
+    setUser(res.user);
   }, []);
 
   const logout = useCallback(() => {
