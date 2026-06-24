@@ -6,18 +6,18 @@ import { Home, Search, Library, Music2, ListMusic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
-  { href: '/', icon: Home, label: 'Home' },
-  { href: '/search', icon: Search, label: 'Search' },
+  { href: '/',        icon: Home,    label: 'Home'    },
+  { href: '/search',  icon: Search,  label: 'Search'  },
   { href: '/library', icon: Library, label: 'Library' },
 ] as const;
 
 const PLAYLISTS = [
-  'Chill Vibes',
-  'Workout Mix',
-  'Late Night Jazz',
-  'Focus Flow',
-  'Road Trip Anthems',
-];
+  { id: 1, name: 'Chill Vibes'       },
+  { id: 2, name: 'Workout Mix'       },
+  { id: 3, name: 'Late Night Jazz'   },
+  { id: 4, name: 'Focus Flow'        },
+  { id: 5, name: 'Road Trip Anthems' },
+] as const;
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -57,14 +57,24 @@ export function Sidebar() {
             Playlists
           </span>
         </div>
-        {PLAYLISTS.map((name) => (
-          <button
-            key={name}
-            className="flex items-start w-full px-3 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors text-left"
-          >
-            {name}
-          </button>
-        ))}
+        {PLAYLISTS.map(({ id, name }) => {
+          const href = `/playlist/${id}`;
+          const isActive = pathname === href;
+          return (
+            <Link
+              key={id}
+              href={href}
+              className={cn(
+                'flex items-start w-full px-3 py-2 rounded-md text-sm transition-colors',
+                isActive
+                  ? 'text-foreground bg-accent'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+              )}
+            >
+              {name}
+            </Link>
+          );
+        })}
       </div>
     </aside>
   );

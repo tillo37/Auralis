@@ -73,3 +73,8 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }
+
+@keyframes eq-bar {
+  0%, 100% { transform: scaleY(0.3); }
+  50%       { transform: scaleY(1);   }
+}
