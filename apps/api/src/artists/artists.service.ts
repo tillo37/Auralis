@@ -32,7 +32,9 @@ export class ArtistsService {
     await this.findOne(id);
     if (dto.name) {
       const conflict = await this.prisma.artist.findUnique({ where: { name: dto.name } });
-      if (conflict && conflict.id !== id) throw new ConflictException(`Artist "${dto.name}" already exists`);
+      if (conflict && conflict.id !== id) {
+        throw new ConflictException(`Artist "${dto.name}" already exists`);
+      }
     }
     const artist = await this.prisma.artist.update({ where: { id }, data: dto });
     return ArtistDto.from(artist);

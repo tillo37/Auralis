@@ -1,8 +1,17 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthService, type AuthResult } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import type { UserPublic } from '../users/users.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -22,5 +31,14 @@ export class AuthController {
   @ApiOkResponse({ description: 'JWT returned' })
   login(@Body() dto: LoginDto): Promise<AuthResult> {
     return this.authService.login(dto);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiOkResponse({ description: 'Current user' })
+  getMe(@CurrentUser() userId: string): Promise<UserPublic> {
+    return this.authService.getProfile(userId);
   }
 }

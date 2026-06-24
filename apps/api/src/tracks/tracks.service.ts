@@ -10,7 +10,7 @@ export class TracksService {
 
   async findAll(): Promise<TrackDto[]> {
     const tracks = await this.prisma.track.findMany({
-      orderBy: [{ artist: { name: 'asc' } }, { album: { releaseYear: 'asc' } }, { trackNumber: 'asc' }],
+      orderBy: [{ artist: { name: 'asc' } }, { album: { releaseYear: 'asc' } }, { title: 'asc' }],
     });
     return tracks.map(TrackDto.from);
   }
@@ -22,24 +22,30 @@ export class TracksService {
   }
 
   async create(dto: CreateTrackDto): Promise<TrackDto> {
-    const albumExists = await this.prisma.album.findUnique({ where: { id: dto.albumId } });
-    if (!albumExists) throw new NotFoundException(`Album ${dto.albumId} not found`);
     const artistExists = await this.prisma.artist.findUnique({ where: { id: dto.artistId } });
     if (!artistExists) throw new NotFoundException(`Artist ${dto.artistId} not found`);
+
+    if (dto.albumId) {
+      const albumExists = await this.prisma.album.findUnique({ where: { id: dto.albumId } });
+      if (!albumExists) throw new NotFoundException(`Album ${dto.albumId} not found`);
+    }
+
     const track = await this.prisma.track.create({ data: dto });
     return TrackDto.from(track);
   }
 
   async update(id: string, dto: UpdateTrackDto): Promise<TrackDto> {
     await this.findOne(id);
-    if (dto.albumId) {
-      const albumExists = await this.prisma.album.findUnique({ where: { id: dto.albumId } });
-      if (!albumExists) throw new NotFoundException(`Album ${dto.albumId} not found`);
-    }
+
     if (dto.artistId) {
       const artistExists = await this.prisma.artist.findUnique({ where: { id: dto.artistId } });
       if (!artistExists) throw new NotFoundException(`Artist ${dto.artistId} not found`);
     }
+    if (dto.albumId) {
+      const albumExists = await this.prisma.album.findUnique({ where: { id: dto.albumId } });
+      if (!albumExists) throw new NotFoundException(`Album ${dto.albumId} not found`);
+    }
+
     const track = await this.prisma.track.update({ where: { id }, data: dto });
     return TrackDto.from(track);
   }
@@ -47,5 +53,14 @@ export class TracksService {
   async remove(id: string): Promise<void> {
     await this.findOne(id);
     await this.prisma.track.delete({ where: { id } });
+  }
+
+  async incrementPlayCount(id: string): Promise<void> {
+    const exists = await this.prisma.track.findUnique({ where: { id } });
+    if (!exists) throw new NotFoundException(`Track ${id} not found`);
+    await this.prisma.track.update({
+      where: { id },
+      data: { playCount: { increment: 1 } },
+    });
   }
 }

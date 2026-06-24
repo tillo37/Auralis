@@ -8,25 +8,26 @@ export class CreateTrackDto {
   title!: string;
 
   @ApiProperty()
-  @IsString()
-  albumId!: string;
+  @IsInt()
+  @Min(1)
+  duration!: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUrl()
+  fileUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUrl()
+  coverUrl?: string;
 
   @ApiProperty()
   @IsString()
   artistId!: string;
 
-  @ApiProperty()
-  @IsInt()
-  @Min(1)
-  trackNumber!: number;
-
-  @ApiProperty()
-  @IsInt()
-  @Min(1)
-  durationSeconds!: number;
-
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsUrl()
-  audioUrl?: string;
+  @IsString()
+  albumId?: string;
 }

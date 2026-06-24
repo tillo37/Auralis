@@ -18,6 +18,9 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  playlists   Playlist[]
+  likedTracks LikedTrack[]
+
   @@map("users")
 }
 
@@ -25,11 +28,13 @@ model Artist {
   id        String   @id @default(cuid())
   name      String   @unique
   bio       String?
-  imageUrl  String?
+  avatarUrl String?
+  verified  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  albums    Album[]
-  tracks    Track[]
+
+  tracks Track[]
+  albums Album[]
 
   @@map("artists")
 }
@@ -37,29 +42,75 @@ model Artist {
 model Album {
   id          String   @id @default(cuid())
   title       String
-  artistId    String
   coverUrl    String?
   releaseYear Int
+  artistId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  artist      Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
-  tracks      Track[]
+
+  artist Artist  @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  tracks Track[]
 
   @@map("albums")
 }
 
 model Track {
-  id              String   @id @default(cuid())
-  title           String
-  albumId         String
-  artistId        String
-  trackNumber     Int
-  durationSeconds Int
-  audioUrl        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  album           Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
-  artist          Artist   @relation(fields: [artistId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  title     String
+  duration  Int      @default(0)
+  fileUrl   String?
+  coverUrl  String?
+  playCount Int      @default(0)
+  artistId  String
+  albumId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  artist    Artist          @relation(fields: [artistId], references: [id])
+  album     Album?          @relation(fields: [albumId], references: [id])
+  playlists PlaylistTrack[]
+  likedBy   LikedTrack[]
 
   @@map("tracks")
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  coverUrl    String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner  User            @relation(fields: [ownerId], references: [id])
+  tracks PlaylistTrack[]
+
+  @@map("playlists")
+}
+
+model PlaylistTrack {
+  id         String   @id @default(cuid())
+  playlistId String
+  trackId    String
+  addedAt    DateTime @default(now())
+  order      Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track    Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([playlistId, trackId])
+  @@map("playlist_tracks")
+}
+
+model LikedTrack {
+  userId  String
+  trackId String
+  likedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  track Track @relation(fields: [trackId], references: [id])
+
+  @@id([userId, trackId])
+  @@map("liked_tracks")
 }

@@ -32,7 +32,7 @@ export class AuthService {
       throw new ConflictException(`A user with that ${field} already exists`);
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 12);
+    const passwordHash = await bcrypt.hash(dto.password, 10);
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -55,6 +55,18 @@ export class AuthService {
 
     const accessToken = this.sign(user.id, user.email);
     return { user: this.usersService.strip(user), accessToken };
+  }
+
+  async validateUser(email: string, password: string): Promise<UserPublic | null> {
+    const user = await this.usersService.findByEmailWithHash(email);
+    if (!user) return null;
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return null;
+    return this.usersService.strip(user);
+  }
+
+  async getProfile(userId: string): Promise<UserPublic> {
+    return this.usersService.findById(userId);
   }
 
   private sign(userId: string, email: string): string {

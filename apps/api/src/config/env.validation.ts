@@ -8,6 +8,11 @@ const envSchema = z.object({
     .enum(['development', 'production', 'test'])
     .optional()
     .default('development'),
+  MINIO_ENDPOINT: z.string().optional().default('localhost'),
+  MINIO_PORT: z.string().optional().default('9000'),
+  MINIO_ACCESS_KEY: z.string().optional().default('minioadmin'),
+  MINIO_SECRET_KEY: z.string().optional().default('minioadmin'),
+  MINIO_BUCKET: z.string().optional().default('auralis'),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -10,8 +10,19 @@ export class UpdateTrackDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsString()
-  albumId?: string;
+  @IsInt()
+  @Min(1)
+  duration?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUrl()
+  fileUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsUrl()
+  coverUrl?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
@@ -20,18 +31,6 @@ export class UpdateTrackDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  trackNumber?: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  durationSeconds?: number;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsUrl()
-  audioUrl?: string;
+  @IsString()
+  albumId?: string;
 }

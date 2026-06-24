@@ -9,6 +9,10 @@ import { UsersModule } from './users/users.module';
 import { ArtistsModule } from './artists/artists.module';
 import { AlbumsModule } from './albums/albums.module';
 import { TracksModule } from './tracks/tracks.module';
+import { PlaylistsModule } from './playlists/playlists.module';
+import { LikesModule } from './likes/likes.module';
+import { StorageModule } from './storage/storage.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { TracksModule } from './tracks/tracks.module';
     ArtistsModule,
     AlbumsModule,
     TracksModule,
+    PlaylistsModule,
+    LikesModule,
+    StorageModule,
+    UploadModule,
     HealthModule,
   ],
 })

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -150,18 +151,19 @@ function randomDuration(): number {
 async function main(): Promise<void> {
   console.log('Seeding database...');
 
+  const passwordHash = await bcrypt.hash('demo1234', 10);
   const demo = await prisma.user.upsert({
     where: { email: 'demo@auralis.app' },
     update: {},
     create: {
       email: 'demo@auralis.app',
       username: 'demo',
-      passwordHash: '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/Lewwd4h5WJeHaIFde',
+      passwordHash,
       displayName: 'Demo User',
       isVerified: true,
     },
   });
-  console.log(`Upserted demo user: ${demo.email}`);
+  console.log(`Upserted demo user: ${demo.email} (password: demo1234)`);
 
   for (const a of ARTISTS) {
     await prisma.artist.upsert({
@@ -174,6 +176,7 @@ async function main(): Promise<void> {
 
   let albumCount = 0;
   let trackCount = 0;
+  const firstTracks: string[] = [];
 
   for (const albumData of ALBUMS) {
     const artist = await prisma.artist.findUniqueOrThrow({
@@ -199,22 +202,42 @@ async function main(): Promise<void> {
       const trackExists = await prisma.track.findFirst({
         where: { title: albumData.trackTitles[i], albumId: album.id },
       });
-      if (!trackExists) {
-        await prisma.track.create({
-          data: {
-            title: albumData.trackTitles[i],
-            albumId: album.id,
-            artistId: artist.id,
-            trackNumber: i + 1,
-            durationSeconds: randomDuration(),
-          },
-        });
-      }
+      const track = trackExists
+        ? trackExists
+        : await prisma.track.create({
+            data: {
+              title: albumData.trackTitles[i],
+              albumId: album.id,
+              artistId: artist.id,
+              duration: randomDuration(),
+            },
+          });
+      if (i === 0) firstTracks.push(track.id);
       trackCount++;
     }
   }
 
   console.log(`Upserted ${albumCount} albums, ${trackCount} tracks`);
+
+  const existingPlaylist = await prisma.playlist.findFirst({
+    where: { title: 'My Favourites', ownerId: demo.id },
+  });
+  if (!existingPlaylist) {
+    const playlist = await prisma.playlist.create({
+      data: {
+        title: 'My Favourites',
+        description: 'A hand-picked collection of the best tracks.',
+        ownerId: demo.id,
+      },
+    });
+    for (let i = 0; i < Math.min(5, firstTracks.length); i++) {
+      await prisma.playlistTrack.create({
+        data: { playlistId: playlist.id, trackId: firstTracks[i], order: i + 1 },
+      });
+    }
+    console.log(`Created demo playlist: ${playlist.title}`);
+  }
+
   console.log('Seed complete.');
 }
 

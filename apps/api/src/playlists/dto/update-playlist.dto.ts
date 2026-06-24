@@ -1,25 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
 
-export class UpdateArtistDto {
+export class UpdatePlaylistDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   @MinLength(1)
-  name?: string;
+  title?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  bio?: string;
+  description?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
   @IsUrl()
-  avatarUrl?: string;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsBoolean()
-  verified?: boolean;
+  coverUrl?: string;
 }

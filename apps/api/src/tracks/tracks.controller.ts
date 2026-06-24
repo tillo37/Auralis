@@ -1,5 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -7,6 +19,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TracksService } from './tracks.service';
 import { TrackDto } from './dto/track.dto';
 import { CreateTrackDto } from './dto/create-track.dto';
@@ -33,14 +46,18 @@ export class TracksController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new track' })
   @ApiCreatedResponse({ type: TrackDto })
-  @ApiNotFoundResponse({ description: 'Album or Artist not found' })
+  @ApiNotFoundResponse({ description: 'Artist or Album not found' })
   create(@Body() dto: CreateTrackDto): Promise<TrackDto> {
     return this.tracksService.create(dto);
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a track' })
   @ApiOkResponse({ type: TrackDto })
   @ApiNotFoundResponse({ description: 'Track not found' })
@@ -49,11 +66,22 @@ export class TracksController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a track' })
   @ApiNoContentResponse()
   @ApiNotFoundResponse({ description: 'Track not found' })
   remove(@Param('id') id: string): Promise<void> {
     return this.tracksService.remove(id);
+  }
+
+  @Post(':id/play')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Increment play count' })
+  @ApiNoContentResponse()
+  @ApiNotFoundResponse({ description: 'Track not found' })
+  play(@Param('id') id: string): Promise<void> {
+    return this.tracksService.incrementPlayCount(id);
   }
 }

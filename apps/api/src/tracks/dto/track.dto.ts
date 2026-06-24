@@ -9,19 +9,22 @@ export class TrackDto {
   title!: string;
 
   @ApiProperty()
-  albumId!: string;
+  duration!: number;
+
+  @ApiProperty({ nullable: true })
+  fileUrl!: string | null;
+
+  @ApiProperty({ nullable: true })
+  coverUrl!: string | null;
+
+  @ApiProperty()
+  playCount!: number;
 
   @ApiProperty()
   artistId!: string;
 
-  @ApiProperty()
-  trackNumber!: number;
-
-  @ApiProperty()
-  durationSeconds!: number;
-
   @ApiProperty({ nullable: true })
-  audioUrl!: string | null;
+  albumId!: string | null;
 
   @ApiProperty()
   createdAt!: Date;
@@ -30,11 +33,12 @@ export class TrackDto {
     const dto = new TrackDto();
     dto.id = track.id;
     dto.title = track.title;
-    dto.albumId = track.albumId;
+    dto.duration = track.duration;
+    dto.fileUrl = track.fileUrl;
+    dto.coverUrl = track.coverUrl;
+    dto.playCount = track.playCount;
     dto.artistId = track.artistId;
-    dto.trackNumber = track.trackNumber;
-    dto.durationSeconds = track.durationSeconds;
-    dto.audioUrl = track.audioUrl;
+    dto.albumId = track.albumId;
     dto.createdAt = track.createdAt;
     return dto;
   }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
 
 export class CreateArtistDto {
   @ApiProperty()
@@ -15,5 +15,10 @@ export class CreateArtistDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsUrl()
-  imageUrl?: string;
+  avatarUrl?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  verified?: boolean;
 }

@@ -12,7 +12,10 @@ export class ArtistDto {
   bio!: string | null;
 
   @ApiProperty({ nullable: true })
-  imageUrl!: string | null;
+  avatarUrl!: string | null;
+
+  @ApiProperty()
+  verified!: boolean;
 
   @ApiProperty()
   createdAt!: Date;
@@ -22,7 +25,8 @@ export class ArtistDto {
     dto.id = artist.id;
     dto.name = artist.name;
     dto.bio = artist.bio;
-    dto.imageUrl = artist.imageUrl;
+    dto.avatarUrl = artist.avatarUrl;
+    dto.verified = artist.verified;
     dto.createdAt = artist.createdAt;
     return dto;
   }
