@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/providers/auth-provider';
+import { PlayerProvider } from '@/context/player-context';
 import { AppShell } from '@/components/app-shell';
 import './globals.css';
 
@@ -20,7 +21,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={inter.className}>
         <AuthProvider>
-          <AppShell>{children}</AppShell>
+          <PlayerProvider>
+            <AppShell>{children}</AppShell>
+          </PlayerProvider>
         </AuthProvider>
       </body>
     </html>

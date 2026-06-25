@@ -46,10 +46,14 @@ export class ApiClient {
     }
 
     const res = await fetch(url, { headers, body, ...init });
-    const data = await res.json();
+
+    // Handle empty bodies (e.g., 204 No Content)
+    const text = await res.text();
+    const data = text.length > 0 ? (JSON.parse(text) as unknown) : null;
 
     if (!res.ok) {
-      const msg: string = data?.message ?? `Request failed: ${res.status}`;
+      const errData = data as Record<string, unknown> | null;
+      const msg = (errData?.message as string | string[] | undefined) ?? `Request failed: ${res.status}`;
       throw new ApiError(res.status, Array.isArray(msg) ? msg[0] : msg);
     }
 
@@ -66,6 +70,10 @@ export class ApiClient {
       method: 'POST',
       body: JSON.stringify(body),
     });
+  }
+
+  delete<T>(path: string, options?: RequestOptions): Promise<T> {
+    return this.request<T>(path, { ...options, method: 'DELETE' });
   }
 }
 
