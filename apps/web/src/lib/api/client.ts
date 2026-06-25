@@ -1,18 +1,15 @@
 import { env } from '../env';
+import { getToken } from '../auth';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
-interface ApiResponse<T> {
-  data: T;
-  success: true;
-}
-
-interface ApiError {
-  success: false;
-  message: string;
-  timestamp: string;
+export class ApiError extends Error {
+  constructor(public statusCode: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
 export class ApiClient {
@@ -31,22 +28,32 @@ export class ApiClient {
   }
 
   async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-    const { params, ...init } = options;
+    const { params, body, headers: extraHeaders, ...init } = options;
     const url = this.buildUrl(path, params);
 
-    const res = await fetch(url, {
-      headers: { 'Content-Type': 'application/json', ...init.headers },
-      ...init,
-    });
+    const headers: Record<string, string> = {};
 
-    const body = (await res.json()) as ApiResponse<T> | ApiError;
-
-    if (!res.ok) {
-      const err = body as ApiError;
-      throw new Error(err.message ?? `Request failed: ${res.status}`);
+    const token = getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (body !== undefined) {
+      headers['Content-Type'] = 'application/json';
     }
 
-    return body as T;
+    if (extraHeaders) {
+      Object.assign(headers, extraHeaders);
+    }
+
+    const res = await fetch(url, { headers, body, ...init });
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg: string = data?.message ?? `Request failed: ${res.status}`;
+      throw new ApiError(res.status, Array.isArray(msg) ? msg[0] : msg);
+    }
+
+    return data as T;
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {

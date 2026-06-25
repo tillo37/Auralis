@@ -7,14 +7,18 @@ import { registerSchema, type RegisterFormData } from '@/features/auth/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/providers/auth-provider';
+import { ApiError } from '@/lib/api';
 
 type FieldErrors = Partial<Record<keyof RegisterFormData, string>>;
 
 const EMPTY: RegisterFormData = { username: '', email: '', displayName: '', password: '' };
 
 export default function RegisterPage() {
+  const { register } = useAuth();
   const [values, setValues] = useState<RegisterFormData>(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function set<K extends keyof RegisterFormData>(field: K, value: string) {
@@ -37,10 +41,20 @@ export default function RegisterPage() {
     }
 
     setErrors({});
+    setFormError(null);
     setIsSubmitting(true);
-    // placeholder — API wiring comes later
-    console.log('Register submit:', result.data);
-    setIsSubmitting(false);
+
+    try {
+      await register(result.data);
+    } catch (err) {
+      if (err instanceof ApiError && err.statusCode === 409) {
+        setFormError('Email or username already taken.');
+      } else {
+        setFormError('Something went wrong, please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -57,6 +71,12 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          {formError && (
+            <p className="rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2 text-sm text-destructive">
+              {formError}
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="username">Username</Label>
             <Input

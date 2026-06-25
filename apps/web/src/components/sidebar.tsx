@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Library, Music2, ListMusic } from 'lucide-react';
+import { Home, Search, Library, Music2, ListMusic, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/providers/auth-provider';
+import { Button } from '@/components/ui/button';
 
 const NAV_LINKS = [
   { href: '/',        icon: Home,    label: 'Home'    },
@@ -19,8 +21,18 @@ const PLAYLISTS = [
   { id: 5, name: 'Road Trip Anthems' },
 ] as const;
 
+function getInitials(displayName: string): string {
+  return displayName
+    .split(' ')
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const { user, isLoading, logout } = useAuth();
 
   return (
     <aside className="fixed left-0 top-0 bottom-20 w-60 flex flex-col bg-card border-r border-border overflow-y-auto z-10">
@@ -75,6 +87,36 @@ export function Sidebar() {
             </Link>
           );
         })}
+      </div>
+
+      {/* User section */}
+      <div className="mt-auto px-3 pb-4 border-t border-border pt-3">
+        {isLoading ? (
+          <div className="h-12 rounded-md bg-muted animate-pulse" />
+        ) : user ? (
+          <div className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-accent/50 transition-colors">
+            <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0">
+              <span className="text-xs font-bold text-primary-foreground">
+                {getInitials(user.displayName)}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground truncate">{user.displayName}</p>
+              <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
+            </div>
+            <button
+              onClick={logout}
+              aria-label="Sign out"
+              className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <Button variant="ghost" className="w-full" asChild>
+            <Link href="/login">Sign in</Link>
+          </Button>
+        )}
       </div>
     </aside>
   );

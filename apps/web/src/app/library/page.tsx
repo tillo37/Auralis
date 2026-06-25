@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Heart, Search } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { MusicCard } from '@/components/music-card';
 import { cn } from '@/lib/utils';
 
@@ -49,7 +50,7 @@ const TABS: { id: Tab; label: string }[] = [
 // Page
 // ---------------------------------------------------------------------------
 
-export default function LibraryPage() {
+function LibraryContent() {
   const [activeTab, setActiveTab] = useState<Tab>('playlists');
   const [filter, setFilter]       = useState('');
   const [sort, setSort]           = useState<Sort>('recent');
@@ -173,5 +174,13 @@ export default function LibraryPage() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function LibraryPage() {
+  return (
+    <ProtectedRoute>
+      <LibraryContent />
+    </ProtectedRoute>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { User, AlertTriangle } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -77,7 +78,7 @@ const USER = {
   initials:    'DU',
 } as const;
 
-export default function ProfilePage() {
+function ProfileContent() {
   // Profile edit state
   const [isEditing, setIsEditing]               = useState(false);
   const [displayName, setDisplayName]           = useState<string>(USER.displayName);
@@ -264,5 +265,13 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <ProtectedRoute>
+      <ProfileContent />
+    </ProtectedRoute>
   );
 }

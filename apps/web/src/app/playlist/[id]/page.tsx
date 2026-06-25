@@ -1,6 +1,7 @@
 'use client';
 
 import { Shuffle, Heart, MoreHorizontal, Play } from 'lucide-react';
+import { ProtectedRoute } from '@/components/auth/protected-route';
 import { TrackRow } from '@/components/track-row';
 
 // ---------------------------------------------------------------------------
@@ -35,7 +36,7 @@ const TRACKS = [
 // Page
 // ---------------------------------------------------------------------------
 
-export default function PlaylistPage() {
+function PlaylistContent() {
   return (
     <div className="min-h-full">
       {/* Header with gradient background */}
@@ -131,5 +132,13 @@ export default function PlaylistPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+export default function PlaylistPage() {
+  return (
+    <ProtectedRoute>
+      <PlaylistContent />
+    </ProtectedRoute>
   );
 }

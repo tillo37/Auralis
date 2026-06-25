@@ -2,27 +2,27 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/providers/auth-provider';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  redirectTo?: string;
 }
 
-export function ProtectedRoute({ children, redirectTo = '/login' }: ProtectedRouteProps) {
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.replace(redirectTo);
+      router.replace('/login');
     }
-  }, [isAuthenticated, isLoading, redirectTo, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

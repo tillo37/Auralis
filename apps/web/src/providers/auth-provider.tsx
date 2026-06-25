@@ -1,28 +1,18 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { UserPublic } from '@auralis/shared-types';
-import { apiClient } from '@/lib/api';
-import {
-  clearAuth,
-  getStoredUser,
-  getToken,
-  setStoredUser,
-  setToken,
-} from '@/lib/auth';
-import type { LoginFormData, RegisterFormData } from '@/features/auth/schemas';
-
-interface AuthResponse {
-  user: UserPublic;
-  accessToken: string;
-}
+import { auth } from '@/lib/api';
+import { setToken } from '@/lib/auth';
+import type { RegisterFormData } from '@/features/auth/schemas';
 
 interface AuthContextValue {
   user: UserPublic | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (data: LoginFormData) => Promise<void>;
-  register: (data: RegisterFormData) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (dto: RegisterFormData) => Promise<void>;
   logout: () => void;
 }
 
@@ -31,34 +21,46 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserPublic | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const storedUser = getStoredUser();
-    const token = getToken();
-    if (storedUser && token) {
-      setUser(storedUser);
+    if (!auth.isLoggedIn()) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+    auth
+      .me()
+      .then(setUser)
+      .catch(() => {
+        auth.logout();
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (data: LoginFormData) => {
-    const res = await apiClient.post<AuthResponse>('/auth/login', data);
-    setToken(res.accessToken);
-    setStoredUser(res.user);
-    setUser(res.user);
-  }, []);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const u = await auth.login({ email, password });
+      setUser(u);
+      router.push('/');
+    },
+    [router],
+  );
 
-  const register = useCallback(async (data: RegisterFormData) => {
-    const res = await apiClient.post<AuthResponse>('/auth/register', data);
-    setToken(res.accessToken);
-    setStoredUser(res.user);
-    setUser(res.user);
-  }, []);
+  const register = useCallback(
+    async (dto: RegisterFormData) => {
+      const res = await auth.register(dto);
+      setToken(res.accessToken);
+      setUser(res.user);
+      router.push('/');
+    },
+    [router],
+  );
 
   const logout = useCallback(() => {
-    clearAuth();
+    auth.logout();
     setUser(null);
-  }, []);
+    router.push('/login');
+  }, [router]);
 
   return (
     <AuthContext.Provider

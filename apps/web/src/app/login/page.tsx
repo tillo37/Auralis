@@ -8,12 +8,16 @@ import { loginSchema, type LoginFormData } from '@/features/auth/schemas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/providers/auth-provider';
+import { ApiError } from '@/lib/api';
 
 type FieldErrors = Partial<Record<keyof LoginFormData, string>>;
 
 export default function LoginPage() {
+  const { login } = useAuth();
   const [values, setValues] = useState<LoginFormData>({ email: '', password: '' });
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function set<K extends keyof LoginFormData>(field: K, value: string) {
@@ -36,10 +40,20 @@ export default function LoginPage() {
     }
 
     setErrors({});
+    setFormError(null);
     setIsSubmitting(true);
-    // placeholder — API wiring comes later
-    console.log('Login submit:', result.data);
-    setIsSubmitting(false);
+
+    try {
+      await login(result.data.email, result.data.password);
+    } catch (err) {
+      if (err instanceof ApiError && err.statusCode === 401) {
+        setFormError('Invalid email or password.');
+      } else {
+        setFormError('Something went wrong, please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -56,6 +70,12 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          {formError && (
+            <p className="rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2 text-sm text-destructive">
+              {formError}
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
