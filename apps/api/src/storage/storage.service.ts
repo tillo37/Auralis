@@ -46,6 +46,8 @@ export class StorageService implements OnModuleInit {
       'Content-Type': file.mimetype,
     });
 
+    // TODO: In production, configure MinIO bucket policy to allow public read
+    // or use presigned URLs via getSignedUrl() for each track before returning it.
     return `http://${this.endpoint}:${this.port}/${this.bucket}/${objectName}`;
   }
 
