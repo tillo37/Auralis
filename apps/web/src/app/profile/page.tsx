@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { User, AlertTriangle } from 'lucide-react';
+import { User, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/providers/auth-provider';
 import { cn } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
@@ -67,28 +68,38 @@ function SettingRow({
   );
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || '?';
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-const USER = {
-  displayName: 'Demo User',
-  username:    'demouser',
-  email:       'demo@auralis.app',
-  initials:    'DU',
-} as const;
-
 function ProfileContent() {
-  // Profile edit state
-  const [isEditing, setIsEditing]               = useState(false);
-  const [displayName, setDisplayName]           = useState<string>(USER.displayName);
-  const [username, setUsername]                 = useState<string>(USER.username);
-  const [draftDisplayName, setDraftDisplayName] = useState<string>(USER.displayName);
-  const [draftUsername, setDraftUsername]       = useState<string>(USER.username);
+  const { user, updateUser } = useAuth();
 
-  // Playback settings
-  const [autoplay, setAutoplay]       = useState(true);
-  const [explicit, setExplicit]       = useState(false);
+  // Derive from auth context (fall back to placeholders while loading)
+  const displayName = user?.displayName ?? '';
+  const username    = user?.username    ?? '';
+  const email       = user?.email       ?? '';
+  const initials    = getInitials(displayName);
+
+  // Edit state
+  const [isEditing, setIsEditing]               = useState(false);
+  const [draftDisplayName, setDraftDisplayName] = useState('');
+  const [draftUsername, setDraftUsername]       = useState('');
+  const [saveStatus, setSaveStatus]             = useState<'idle' | 'saved'>('idle');
+
+  // Playback settings (local-only for now)
+  const [autoplay, setAutoplay] = useState(true);
+  const [explicit, setExplicit] = useState(false);
 
   // Danger zone
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -96,22 +107,31 @@ function ProfileContent() {
   function startEdit() {
     setDraftDisplayName(displayName);
     setDraftUsername(username);
+    setSaveStatus('idle');
     setIsEditing(true);
   }
 
   function saveEdit() {
-    setDisplayName(draftDisplayName.trim() || displayName);
-    setUsername(draftUsername.trim() || username);
+    const next = {
+      displayName: draftDisplayName.trim() || displayName,
+      username:    draftUsername.trim()    || username,
+    };
+    // Update local auth context immediately.
+    // TODO: call auth.updateProfile(next) once PATCH /auth/profile is implemented on the backend.
+    updateUser(next);
     setIsEditing(false);
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 2500);
   }
 
   function cancelEdit() {
     setIsEditing(false);
+    setSaveStatus('idle');
   }
 
   return (
     <div className="p-6 max-w-4xl">
-      <h1 className="text-2xl font-bold text-foreground mb-8">Profile & Settings</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-8">Profile &amp; Settings</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {/* ---------------------------------------------------------------- */}
@@ -123,17 +143,25 @@ function ProfileContent() {
           {/* Avatar */}
           <div className="flex flex-col items-center gap-3">
             <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center shrink-0">
-              <span className="text-2xl font-bold text-primary-foreground">{USER.initials}</span>
+              <span className="text-2xl font-bold text-primary-foreground">{initials}</span>
             </div>
           </div>
+
+          {/* "Saved!" feedback banner */}
+          {saveStatus === 'saved' && (
+            <div className="flex items-center gap-2 text-sm text-green-500 justify-center">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Saved!
+            </div>
+          )}
 
           {/* Display / edit */}
           {!isEditing ? (
             <div className="space-y-3 text-center">
               <div>
-                <p className="text-lg font-bold text-foreground">{displayName}</p>
-                <p className="text-sm text-muted-foreground">@{username}</p>
-                <p className="text-sm text-muted-foreground mt-1">{USER.email}</p>
+                <p className="text-lg font-bold text-foreground">{displayName || '—'}</p>
+                <p className="text-sm text-muted-foreground">@{username || '—'}</p>
+                <p className="text-sm text-muted-foreground mt-1">{email}</p>
               </div>
               <Button variant="outline" size="sm" onClick={startEdit}>
                 <User className="h-4 w-4" />
@@ -178,8 +206,7 @@ function ProfileContent() {
           <section className="rounded-xl border border-border bg-card p-6 space-y-1">
             <h2 className="text-base font-semibold text-foreground mb-3">Account</h2>
             <div className="divide-y divide-border">
-              <SettingRow label="Email" description={USER.email}>
-                {/* read-only display */}
+              <SettingRow label="Email" description={email}>
                 <span className="text-xs text-muted-foreground">Verified</span>
               </SettingRow>
               <SettingRow label="Password">
@@ -215,10 +242,7 @@ function ProfileContent() {
           {/* Appearance */}
           <section className="rounded-xl border border-border bg-card p-6">
             <h2 className="text-base font-semibold text-foreground mb-3">Appearance</h2>
-            <SettingRow
-              label="Dark mode"
-              description="Auralis always uses dark mode"
-            >
+            <SettingRow label="Dark mode" description="Auralis always uses dark mode">
               <Toggle checked={true} onChange={() => {}} disabled />
             </SettingRow>
           </section>
@@ -228,11 +252,7 @@ function ProfileContent() {
             <h2 className="text-base font-semibold text-destructive mb-3">Danger zone</h2>
 
             {!showDeleteConfirm ? (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
+              <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
                 Delete account
               </Button>
             ) : (
@@ -251,11 +271,7 @@ function ProfileContent() {
                   >
                     Confirm delete
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDeleteConfirm(false)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>
                     Cancel
                   </Button>
                 </div>

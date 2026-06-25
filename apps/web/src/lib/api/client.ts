@@ -75,6 +75,14 @@ export class ApiClient {
   delete<T>(path: string, options?: RequestOptions): Promise<T> {
     return this.request<T>(path, { ...options, method: 'DELETE' });
   }
+
+  patch<T>(path: string, body: unknown, options?: RequestOptions): Promise<T> {
+    return this.request<T>(path, {
+      ...options,
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  }
 }
 
 export const apiClient = new ApiClient(`${env.NEXT_PUBLIC_API_URL}/api/v1`);

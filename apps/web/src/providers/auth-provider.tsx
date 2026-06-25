@@ -14,6 +14,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (dto: RegisterFormData) => Promise<void>;
   logout: () => void;
+  updateUser: (partial: Partial<UserPublic>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -62,6 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   }, [router]);
 
+  const updateUser = useCallback((partial: Partial<UserPublic>) => {
+    setUser((u) => (u ? { ...u, ...partial } : null));
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -71,6 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateUser,
       }}
     >
       {children}

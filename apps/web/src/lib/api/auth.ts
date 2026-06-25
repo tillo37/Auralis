@@ -41,4 +41,11 @@ export const auth = {
   isLoggedIn(): boolean {
     return getToken() !== null;
   },
+
+  // TODO: PATCH /auth/profile endpoint is not yet implemented on the backend.
+  // Add the endpoint in the next backend pass, then replace the no-op below with:
+  //   return apiClient.patch<UserPublic>('/auth/profile', dto);
+  async updateProfile(_dto: { displayName?: string; username?: string }): Promise<void> {
+    // no-op until backend endpoint is ready
+  },
 };

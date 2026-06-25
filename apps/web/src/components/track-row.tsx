@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Play, Heart, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { likes as likesApi } from '@/lib/api';
 import { ContextMenu } from './context-menu';
 
 function AnimatedBars() {
@@ -33,6 +34,12 @@ export interface TrackRowProps {
   isPlaying?: boolean;
   onPlay?: () => void;
   showRemove?: boolean;
+  /** ID of the track — required to persist likes via the API */
+  trackId?: string;
+  /** Controlled liked state (pass from parent to keep server in sync) */
+  isLiked?: boolean;
+  /** Called after the API call resolves successfully */
+  onLikeToggle?: (trackId: string, liked: boolean) => void;
 }
 
 export function TrackRow({
@@ -45,9 +52,30 @@ export function TrackRow({
   isPlaying = false,
   onPlay,
   showRemove = false,
+  trackId,
+  isLiked: isLikedProp,
+  onLikeToggle,
 }: TrackRowProps) {
-  const [isLiked, setIsLiked] = useState(false);
+  const [liked, setLiked] = useState(isLikedProp ?? false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Sync controlled prop changes (e.g. parent fetches liked state)
+  useEffect(() => {
+    if (isLikedProp !== undefined) setLiked(isLikedProp);
+  }, [isLikedProp]);
+
+  async function handleLike() {
+    const next = !liked;
+    setLiked(next); // optimistic
+    if (!trackId) return;
+    try {
+      if (next) await likesApi.like(trackId);
+      else await likesApi.unlike(trackId);
+      onLikeToggle?.(trackId, next);
+    } catch {
+      setLiked(!next); // revert on error
+    }
+  }
 
   return (
     <div
@@ -103,16 +131,16 @@ export function TrackRow({
 
       {/* Heart */}
       <button
-        onClick={() => setIsLiked((v) => !v)}
-        aria-label={isLiked ? 'Unlike' : 'Like'}
+        onClick={handleLike}
+        aria-label={liked ? 'Unlike' : 'Like'}
         className={cn(
           'shrink-0 transition-colors',
-          isLiked
+          liked
             ? 'text-primary'
             : 'text-muted-foreground opacity-0 group-hover:opacity-100',
         )}
       >
-        <Heart className={cn('h-4 w-4', isLiked && 'fill-current')} />
+        <Heart className={cn('h-4 w-4', liked && 'fill-current')} />
       </button>
 
       {/* Duration */}

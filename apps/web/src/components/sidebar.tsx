@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Library, Music2, ListMusic, LogOut } from 'lucide-react';
+import { Home, Search, Library, Music2, ListMusic, LogOut, UploadCloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/providers/auth-provider';
 import { Button } from '@/components/ui/button';
 
 const NAV_LINKS = [
-  { href: '/',        icon: Home,    label: 'Home'    },
-  { href: '/search',  icon: Search,  label: 'Search'  },
-  { href: '/library', icon: Library, label: 'Library' },
+  { href: '/',        icon: Home,         label: 'Home'    },
+  { href: '/search',  icon: Search,       label: 'Search'  },
+  { href: '/library', icon: Library,      label: 'Library' },
+  { href: '/upload',  icon: UploadCloud,  label: 'Upload'  },
 ] as const;
 
 const PLAYLISTS = [
