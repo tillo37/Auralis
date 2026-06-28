@@ -59,6 +59,19 @@ function UploadTrackSection() {
     if (imageInputRef.current) imageInputRef.current.value = '';
   }
 
+  const getAudioDuration = (file: File): Promise<number> => {
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      audio.preload = 'metadata';
+      audio.onloadedmetadata = () => {
+        resolve(Math.round(audio.duration));
+        URL.revokeObjectURL(audio.src);
+      };
+      audio.onerror = () => resolve(0);
+      audio.src = URL.createObjectURL(file);
+    });
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!audioFile || !title.trim()) return;
@@ -68,6 +81,9 @@ function UploadTrackSection() {
     setErrorMsg('');
 
     try {
+      // Step 0: extract real duration from the audio file
+      const duration = await getAudioDuration(audioFile);
+
       // Step 1: upload audio file
       const { url: fileUrl } = await uploadFile(audioFile, '/upload/audio');
 
@@ -88,7 +104,7 @@ function UploadTrackSection() {
         title: title.trim(),
         fileUrl,
         coverUrl,
-        duration: 1, // TODO: extract real duration from audio buffer
+        duration,
         artistId: artist.id,
       });
 

@@ -9,7 +9,7 @@ export class CreateTrackDto {
 
   @ApiProperty()
   @IsInt()
-  @Min(1)
+  @Min(0)
   duration!: number;
 
   @ApiProperty({ required: false })
