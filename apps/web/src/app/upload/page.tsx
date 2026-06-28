@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { playlists as playlistsApi } from '@/lib/api';
+import { apiClient } from '@/lib/api/client';
 
 // ---------------------------------------------------------------------------
 // Multipart upload helper — browser-only, always called from event handlers
@@ -77,28 +78,19 @@ function UploadTrackSection() {
         coverUrl = url;
       }
 
-      // Step 3: create track record
-      // TODO: replace 'placeholder' with a real artistId once artist-selection UI is built.
-      //       The POST will fail with a FK error until then.
-      const token = localStorage.getItem(TOKEN_KEY);
-      const trackRes = await fetch(`${API_BASE}/api/v1/tracks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          fileUrl,
-          coverUrl,
-          duration: 1, // TODO: extract real duration from audio buffer
-          artistId: 'placeholder',
-        }),
+      // Step 3: create or get the artist, then create the track with its id
+      const artist = await apiClient.post<{ id: string }>('/artists', {
+        name: artistName.trim() || 'Unknown Artist',
       });
-      if (!trackRes.ok) {
-        const err = await trackRes.json().catch(() => ({})) as Record<string, unknown>;
-        throw new Error((err.message as string | undefined) ?? 'Failed to create track');
-      }
+
+      // Step 4: create track record with the real artistId
+      await apiClient.post('/tracks', {
+        title: title.trim(),
+        fileUrl,
+        coverUrl,
+        duration: 1, // TODO: extract real duration from audio buffer
+        artistId: artist.id,
+      });
 
       setStatus('success');
       resetForm();

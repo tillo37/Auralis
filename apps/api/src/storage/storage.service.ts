@@ -11,11 +11,13 @@ export class StorageService implements OnModuleInit {
   private readonly bucket: string;
   private readonly endpoint: string;
   private readonly port: number;
+  private readonly publicUrl: string;
 
   constructor(private readonly config: ConfigService<Env, true>) {
     this.endpoint = this.config.get('MINIO_ENDPOINT', { infer: true });
     this.port = parseInt(this.config.get('MINIO_PORT', { infer: true }), 10);
     this.bucket = this.config.get('MINIO_BUCKET', { infer: true });
+    this.publicUrl = this.config.get('MINIO_PUBLIC_URL', { infer: true });
 
     this.client = new Minio.Client({
       endPoint: this.endpoint,
@@ -48,7 +50,9 @@ export class StorageService implements OnModuleInit {
 
     // TODO: In production, configure MinIO bucket policy to allow public read
     // or use presigned URLs via getSignedUrl() for each track before returning it.
-    return `http://${this.endpoint}:${this.port}/${this.bucket}/${objectName}`;
+    // Use the browser-accessible public URL, not the internal MinIO endpoint
+    // (which is 'minio' inside Docker and unreachable from the browser).
+    return `${this.publicUrl}/${this.bucket}/${objectName}`;
   }
 
   async deleteFile(objectName: string): Promise<void> {

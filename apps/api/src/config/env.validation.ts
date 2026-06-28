@@ -13,6 +13,7 @@ const envSchema = z.object({
   MINIO_ACCESS_KEY: z.string().optional().default('minioadmin'),
   MINIO_SECRET_KEY: z.string().optional().default('minioadmin'),
   MINIO_BUCKET: z.string().optional().default('auralis'),
+  MINIO_PUBLIC_URL: z.string().default('http://localhost:9000'),
 });
 
 export type Env = z.infer<typeof envSchema>;

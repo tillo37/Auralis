@@ -14,12 +14,12 @@ export class CreateTrackDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   fileUrl?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsUrl()
+  @IsUrl({ require_tld: false })
   coverUrl?: string;
 
   @ApiProperty()
